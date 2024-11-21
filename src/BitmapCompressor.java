@@ -31,9 +31,29 @@ public class BitmapCompressor {
      * Reads a sequence of bits from standard input, compresses them,
      * and writes the results to standard output.
      */
-    public static void compress() {
 
-        // TODO: complete compress()
+
+    private static final int MAX_BLOCK_LEN = 127;
+
+    public static void compress() {
+        boolean nextBit = BinaryStdIn.readBoolean();
+        boolean target = nextBit;
+        while (!BinaryStdIn.isEmpty()) {
+            int count = 0;
+            while (count < MAX_BLOCK_LEN) {
+                if (nextBit != target) {
+                    break;
+                }
+                count++;
+                if (BinaryStdIn.isEmpty()) break;
+                nextBit = BinaryStdIn.readBoolean();
+            }
+
+            BinaryStdOut.write(target);
+            BinaryStdOut.write(count, 7);
+
+            if (!BinaryStdIn.isEmpty()) target = nextBit;
+        }
 
         BinaryStdOut.close();
     }
@@ -43,9 +63,13 @@ public class BitmapCompressor {
      * and writes the results to standard output.
      */
     public static void expand() {
-
-        // TODO: complete expand()
-
+        while (!BinaryStdIn.isEmpty()) {
+            boolean bit = BinaryStdIn.readBoolean();
+            int count = BinaryStdIn.readInt(7);
+            for (int i = 0; i < count; i++) {
+                BinaryStdOut.write(bit);
+            }
+        }
         BinaryStdOut.close();
     }
 
