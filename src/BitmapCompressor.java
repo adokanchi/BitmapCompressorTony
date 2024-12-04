@@ -33,27 +33,38 @@ public class BitmapCompressor {
      */
 
 
-    private static final int MAX_BLOCK_LEN = 127;
+    private static final int MAX_LEN = 255;
+    private static final int BLOCK_LEN = 8;
 
     public static void compress() {
-        boolean nextBit = BinaryStdIn.readBoolean();
-        boolean target = nextBit;
+        // Assume we start with 0's, so if we start with a 1, print that we have no zeros
+        boolean target = BinaryStdIn.readBoolean();
+        if (target) BinaryStdOut.write(0, BLOCK_LEN);
+
+        // count is set to 1 because we already read the first bit
+        int count = 1;
         while (!BinaryStdIn.isEmpty()) {
-            int count = 0;
-            while (count < MAX_BLOCK_LEN) {
-                if (nextBit != target) {
-                    break;
-                }
-                count++;
-                if (BinaryStdIn.isEmpty()) break;
-                nextBit = BinaryStdIn.readBoolean();
+            boolean nextBit = BinaryStdIn.readBoolean();
+            if (nextBit != target) {
+                // We have just read the first bit of a new run
+                BinaryStdOut.write(count, BLOCK_LEN);
+                target = !target;
+                // Again, we set count to 1 because the first bit of the run has already been read to detect that the run has ended
+                count = 1;
             }
-
-            BinaryStdOut.write(target);
-            BinaryStdOut.write(count, 7);
-
-            if (!BinaryStdIn.isEmpty()) target = nextBit;
+            else {
+                // The current run is continuing
+                count++;
+                if (count == MAX_LEN) {
+                    BinaryStdOut.write(count, BLOCK_LEN);
+                    // Count is set to 0 because we haven't read the first bit of the next run (and if the last run continues, we want to print a count of 0)
+                    count = 0;
+                    target = !target;
+                }
+            }
         }
+        // The last run doesn't get written
+        BinaryStdOut.write(count, BLOCK_LEN);
 
         BinaryStdOut.close();
     }
@@ -63,13 +74,15 @@ public class BitmapCompressor {
      * and writes the results to standard output.
      */
     public static void expand() {
+        boolean val = false;
         while (!BinaryStdIn.isEmpty()) {
-            boolean bit = BinaryStdIn.readBoolean();
-            int count = BinaryStdIn.readInt(7);
+            int count = BinaryStdIn.readInt(BLOCK_LEN);
             for (int i = 0; i < count; i++) {
-                BinaryStdOut.write(bit);
+                BinaryStdOut.write(val);
             }
+            val = !val;
         }
+
         BinaryStdOut.close();
     }
 
